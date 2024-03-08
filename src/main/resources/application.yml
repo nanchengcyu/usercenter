@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: ncy-user-center
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://106.14.202.122:3306/user_center?useSSL=false&serverTimezone=UTC
+    username: root
+    password: 1234
+
+mybatis-plus:
+  mapper-locations: classpath:/mapper/*Mapper.xml
+  type-aliases-package: cn.nanchengyu.usercenter
+  configuration:
+    map-underscore-to-camel-case: false
