@@ -10,8 +10,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static cn.nanchengyu.usercenter.constant.UserConstant.USER_LOGIN_STATE;
 
 /**
  * @author nanchengyu
@@ -27,6 +30,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
      * 盐值混淆密码
      */
     private static final  String SALT ="ncy";
+
+
     @Override
     public long userRegister(String userAccount, String userPassword, String checkPassword) {
         //1. 非空
@@ -73,7 +78,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     }
 
     @Override
-    public User doLogin(String userAccount, String userPassword) {
+    public User userLogin(String userAccount, String userPassword, HttpServletRequest request) {
         //1. 非空
         if (StringUtils.isAnyBlank(userAccount, userPassword)) {
             return null;
@@ -105,8 +110,29 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         if (user == null){
             return null;
         }
+        //3.用户脱敏 就是把前端需要得数据返回给前端 防止重要信息暴露
+        User safetyUser = getSafetyUser(user);
 
-        return user;
+        //4.记录用户得登录态
+        request.getSession().setAttribute(USER_LOGIN_STATE,safetyUser);
+
+        return safetyUser;
+    }
+    @Override
+    public User getSafetyUser(User originUser){
+        User safetyUser = new User();
+        safetyUser.setUserRole(originUser.getUserRole());
+        safetyUser.setId(originUser.getId());
+        safetyUser.setUsername(originUser.getUsername());
+        safetyUser.setUserAccount(originUser.getUserAccount());
+        safetyUser.setAvatarUrl(originUser.getAvatarUrl());
+        safetyUser.setGender(originUser.getGender());
+        safetyUser.setUserState(originUser.getUserState());
+        safetyUser.setEmail(originUser.getEmail());
+        safetyUser.setEmail(originUser.getEmail());
+        safetyUser.setCreateTime(originUser.getCreateTime());
+        safetyUser.setPhone(originUser.getPhone());
+        return safetyUser;
     }
 }
 
