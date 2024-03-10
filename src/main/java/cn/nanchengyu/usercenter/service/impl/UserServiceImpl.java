@@ -1,5 +1,7 @@
 package cn.nanchengyu.usercenter.service.impl;
 
+import cn.nanchengyu.usercenter.common.ErrorCode;
+import cn.nanchengyu.usercenter.exception.BusinessException;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import cn.nanchengyu.usercenter.model.domain.User;
@@ -36,11 +38,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     public long userRegister(String userAccount, String userPassword, String checkPassword) {
         //1. 非空
         if (StringUtils.isAnyBlank(userAccount, userPassword, checkPassword)) {
-            return -1;
+//            return -1;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"参数为空");
         }
-        //账号不能超过4位
+        //账号不能小于4位
         if (userAccount.length() < 4) {
-            return -1;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"账号小于4位");
         }
         //密码不能小于8位
         if (userPassword.length() < 8) {
@@ -120,6 +123,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     }
     @Override
     public User getSafetyUser(User originUser){
+        if (originUser == null){
+            return null;
+        }
         User safetyUser = new User();
         safetyUser.setUserRole(originUser.getUserRole());
         safetyUser.setId(originUser.getId());
@@ -134,6 +140,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         safetyUser.setPhone(originUser.getPhone());
         return safetyUser;
     }
+
+    @Override
+    public int userLogout(HttpServletRequest request) {
+       request.getSession().removeAttribute(USER_LOGIN_STATE);
+       return 1;
+    }
+
+
 }
 
 

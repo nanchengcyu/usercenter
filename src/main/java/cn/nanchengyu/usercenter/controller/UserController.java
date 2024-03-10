@@ -1,5 +1,8 @@
 package cn.nanchengyu.usercenter.controller;
 
+import cn.nanchengyu.usercenter.common.BaseResponse;
+import cn.nanchengyu.usercenter.common.ErrorCode;
+import cn.nanchengyu.usercenter.common.ResultUtils;
 import cn.nanchengyu.usercenter.constant.UserConstant;
 import cn.nanchengyu.usercenter.model.domain.User;
 import cn.nanchengyu.usercenter.model.domain.request.UserLoginRequest;
@@ -30,9 +33,9 @@ public class UserController {
     private UserService userService;
 
     @PostMapping("/register")
-    public Long userRegister(@RequestBody UserRegisterRequest userRegisterRequest) {
+    public BaseResponse<Long> userRegister(@RequestBody UserRegisterRequest userRegisterRequest) {
         if (userRegisterRequest == null) {
-            return null;
+            return ResultUtils.error(ErrorCode.PARAMS_ERROR);
         }
         String userPassword = userRegisterRequest.getUserPassword();
         String userAccount = userRegisterRequest.getUserAccount();
@@ -40,13 +43,13 @@ public class UserController {
         if (StringUtils.isAnyBlank(userPassword, userAccount, checkPassword)) {
             return null;
         }
-        return userService.userRegister(userAccount, userPassword, checkPassword);
-
-
+        long result = userService.userRegister(userAccount, userPassword, checkPassword);
+        //return new BaseResponse<>(0,result,"注册成功");
+        return ResultUtils.success(result);
     }
 
     @PostMapping("/login")
-    public User userLogin(@RequestBody UserLoginRequest userLoginRequest, HttpServletRequest request) {
+    public BaseResponse<User> userLogin(@RequestBody UserLoginRequest userLoginRequest, HttpServletRequest request) {
         if (userLoginRequest == null) {
             return null;
         }
@@ -55,10 +58,40 @@ public class UserController {
         if (StringUtils.isAnyBlank(userPassword, userAccount)) {
             return null;
         }
-        return userService.userLogin(userAccount, userPassword, request);
+        User user = userService.userLogin(userAccount, userPassword, request);
+        return new BaseResponse<>(0,user,"登录成功");
+    }
 
+    @PostMapping("/logout")
+    public Integer userLogout(HttpServletRequest request) {
+        if (request == null) {
+            return null;
+        }
+
+        return userService.userLogout(request);
 
     }
+
+
+    /**
+     * 获取当前登录用户信息
+     *
+     * @param request
+     * @return
+     */
+    @GetMapping("/current")
+    public User getCurrentUser(HttpServletRequest request) {
+        Object userObj = request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
+        User cuurentUser = (User) userObj;
+        if (cuurentUser == null) {
+            return null;
+        }
+        Long userId = cuurentUser.getId();
+        User user = userService.getById(userId);
+        return userService.getSafetyUser(user);
+
+    }
+
 
     @GetMapping("/search")
     public List<User> searchUsers(String username) {
